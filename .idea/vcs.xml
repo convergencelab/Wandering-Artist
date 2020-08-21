@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="" />
+    <mapping directory="$PROJECT_DIR$/Mask_RCNN" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/models" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/models/Functional_Group_Detector_using_Tensorflow_object_detection" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/wandering_artist/goprostream" vcs="Git" />
+  </component>
+</project>
