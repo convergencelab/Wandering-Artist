@@ -9,11 +9,14 @@ void loop() {
 }
 */
 //test connection from python to arduino
+// write to python
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(115200); // use the same baud-rate as the python side
 }
-
 void loop() {
+  Serial.println("Hello world from Ardunio!"); // write a string
+  delay(1000);
+  // read from python
   if(Serial.available() > 0) {
     char data = Serial.read();
     char str[2];

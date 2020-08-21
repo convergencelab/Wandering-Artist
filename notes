@@ -1,0 +1,2 @@
+Currently, hourglass 512x512 is taking around 30s to run, likely due to lack of computational power.
+-> for this reason, robotic behaviour should act smoothly with required time to compute object detection
