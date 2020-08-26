@@ -10,6 +10,6 @@ while(True):
     q = cv2.waitKey(1)
     if q == ord("q"):
         break
-    break
-# cv2.destroyAllWindows()
+
+cv2.destroyAllWindows()
 

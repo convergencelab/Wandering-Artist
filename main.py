@@ -10,6 +10,8 @@ from object_detection.utils import config_util
 from object_detection.builders import model_builder
 import cv2
 import matplotlib.pyplot as plt
+import serial, time
+
 
 ####################
 # Object Detection #
@@ -53,19 +55,46 @@ detect_fn = get_model_detection_function(detection_model)
 url = 'http://192.168.2.122:8080/video'
 cap = cv2.VideoCapture(url)
 
+# video writer to record outcome
+width, height = (480, 480)
+FPS = 24
+
+fourcc = cv2.VideoWriter_fourcc(*'MP42')
+video = cv2.VideoWriter('./noise.avi', fourcc, float(FPS), (width, height))
+
+
+
+
 ## Connect Arduino ##
+arduino = serial.Serial('COM8', 115200, timeout=.1)
+flag_descriptions = {
+    0:"No Obstruction",
+    1:"Obstruction"
+}
 
 while(True):
     ret, frame = cap.read()
     # listen for arduino
-    isPotentialOBJ = True
+    time.sleep(1)
+    flag = arduino.readline()[:-2]
+    if flag:
+        # right now any flag is considered obj detection
+        try:
+            isPotentialOBJ = int(flag)
+        except:
+            isPotentialOBJ = 0
+    else:
+        isPotentialOBJ = 0
+
+    arduino.flush()
+    print(flag_descriptions[isPotentialOBJ])
 
     # if not suspecting object show frame
     if frame is not None:
         if isPotentialOBJ:
-
+            # run prediction on obj
             detections, predictions_dict, shapes = predict_obj(frame)
-
+            # copy frame
             label_id_offset = 1
             image_np_with_detections = frame.copy()
 
@@ -91,12 +120,18 @@ while(True):
 
             plt.figure(figsize=(12, 16))
             cv2.imshow(image_np_with_detections)
+            video.write(image_np_with_detections)
+            # write 1 to indicate sucessful obj detection
+            arduino.write(b"1")
         else:
             cv2.imshow('frame', frame)
+            video.write(frame)
+            arduino.write(b"0")
 
     q = cv2.waitKey(1)
     if q == ord("q"):
         break
 
+video.release()
 cv2.destroyAllWindows()
 # plt.savefig("./test.png")

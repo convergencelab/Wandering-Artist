@@ -60,8 +60,6 @@ void loop()
 
     if (distance < 10) {              //if an object is detected
       //back up and turn
-      //Serial.print(" ");
-      //Serial.print("BACK!");
 
       //stop for a moment
       rightMotor(0);
@@ -75,6 +73,7 @@ void loop()
         leftMotor(-255);
         distance = getDistance();
       }
+      
       //one eighty
       rightMotor(-255);
       leftMotor(255);
@@ -83,36 +82,44 @@ void loop()
       //stop
       rightMotor(0);
       leftMotor(0);
-      delay(1000);
-
+      delay(200);
+      //1 == take image
+      Serial.println(1); // write a string
+      // flag to express whether python has detected obj and performed style transfer. 
+      bool successflag = 0;
      //slowly back up until rear detects object (backup = forward as system will be in opposite direction) 
-      while (distance > 10){
+      while (distance > 10 && !successflag){
         rightMotor(255);
         leftMotor(255);
         delay(200);
-        Serial.print(0, DEC);
-        if(Serial.available() > 0) {
-          
+        //stop
+        rightMotor(0);
+        leftMotor(0);
+        delay(200);
+        // wait for python 
+        while (Serial.available() == 0) {
+            delay(50);
         }
-        
+        char data = Serial.read();
+        if(data == "1"){
+          //succesfully detected and performed style transfer
+          successflag = 1;
+        }
         //write to python to do image analysis
         distance = getDistance();
       }
-
-     // need to add something to prevent deadlock here
-     //stop the motors
-     rightMotor(0);
-     leftMotor(0);
+      //move forward otherwise
+      rightMotor(255);
+      leftMotor(255);
+      delay(200);
+    
       
-      
-      
-      
-     
   } else {                        //if the switch is off then stop
 
     //stop the motors
     rightMotor(0);
     leftMotor(0);
+    delay(0);
   }
 }
   delay(50);                      //wait 50 milliseconds between readings
