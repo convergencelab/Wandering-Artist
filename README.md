@@ -17,7 +17,7 @@ Components:
 - 1 sparkfun redboard
 
 object detected: 
-if ultrasound detects image: 
+if ultrasound detects obstruction: 
     turn 180 degrees and begin backing up until full object in image 
     and sensor behind is safe. 
     
