@@ -16,6 +16,7 @@ import serial, time
 ####################
 # Object Detection #
 ####################
+Experiment_title = "Prototype"
 # coco dataset labels
 label_map_path = "./models/research/object_detection/data/mscoco_label_map.pbtxt"
 label_map = label_map_util.load_labelmap(label_map_path)
@@ -60,10 +61,7 @@ width, height = (480, 480)
 FPS = 24
 
 fourcc = cv2.VideoWriter_fourcc(*'MP42')
-video = cv2.VideoWriter('./noise.avi', fourcc, float(FPS), (width, height))
-
-
-
+video = cv2.VideoWriter('./{}.avi'.format(Experiment_title), fourcc, float(FPS), (width, height))
 
 ## Connect Arduino ##
 arduino = serial.Serial('COM8', 115200, timeout=.1)
