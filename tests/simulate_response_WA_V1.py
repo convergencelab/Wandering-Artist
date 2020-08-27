@@ -10,26 +10,46 @@ Program will take arduino request, delay then respond.
 
 import serial, time
 Experiment_title = "Communication Test"
-
+TEST = 2
 ## Connect Arduino ##
 arduino = serial.Serial('COM8', 115200, timeout=.1)
-flag_descriptions = {
-    0:"No Obstruction",
-    1:"Obstruction"
+state_descriptions = {
+    b"000":"object not detected",
+    b"001":"object detected",
+    b"010":"No Obstruction",
+    b"011":"Obstruction",
+    b"100":"Looking for new object"
 }
-# TEST 1: detect obj right off the bat
-while(True):
-    # listen for arduino
-    time.sleep(1)
-    flag = arduino.readline()[:-2]
-    print(flag)
-    if flag:
-        # right now any flag is considered obj detection
-        isPotentialOBJ = int(flag)
-        arduino.flush()
-        print(flag_descriptions[isPotentialOBJ])
-        # write 1: this indicates obj succesfully detected
-        # and style transfer performed
-        time.sleep(10)
-        arduino.write(b"1")
+if TEST == 1:
+    # TEST 1: always detect obj
+    while(True):
+        # listen for arduino
+        time.sleep(1)
+        state = arduino.readline()[:-2]
+        print(state)
+        if state:
+            # right now any flag is considered obj detection
+            isPotentialOBJ = state
+            # arduino.flush()
+            print(state_descriptions[isPotentialOBJ])
+            # write 1: this indicates obj succesfully detected
+            # and style transfer performed
+            time.sleep(1)
+            arduino.write(b"001")
 
+elif TEST == 2:
+    # TEST 2: never detect obj
+    while(True):
+        # listen for arduino
+        time.sleep(1)
+        state = arduino.readline()[:-2]
+        print(state)
+        if state:
+            # right now any flag is considered obj detection
+            isPotentialOBJ = state
+            # arduino.flush()
+            print(state_descriptions[isPotentialOBJ])
+            # write 1: this indicates obj succesfully detected
+            # and style transfer performed
+            time.sleep(1)
+            arduino.write(b"000")

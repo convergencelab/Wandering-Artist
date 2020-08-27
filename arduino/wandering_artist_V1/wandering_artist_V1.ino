@@ -106,8 +106,8 @@ void loop()
       leftMotor(0);
       delay(200);
       /*COMMUNICATE WITH PYTHON*/
-      //1 == take image
-      Serial.println(1); // write a string
+      //11 == obstruction
+      Serial.println("011");
       
      //slowly back up until rear detects object (backup = forward as system will be in opposite direction) 
       while (distance > 10){
@@ -123,19 +123,26 @@ void loop()
             delay(50);
         }
         char data = Serial.read();
-        if(data == "1"){
+        if(data == "001"){
           //succesfully detected and performed style transfer
           //exit loop
           break;
         }
         distance = getDistance();
       }
+      if (distance < 10){
+        Serial.println("011");
+      }
+      Serial.println("100");
       // randomize direction
       randomPerturb();
       distance = getDistance();
       
       /*SCENARIO 2: NO OBSTRUCTION*/
-      } else {                       
+      } else {
+        /*COMMUNICATE WITH PYTHON*/
+        //10 == no obstruction
+        Serial.println("010");                       
         //move forward
         rightMotor(255);
         leftMotor(255);
@@ -199,6 +206,13 @@ void randomPerturb()
   //random amount of time to turn between 200 and 1000 ms
   float randomTurnTime;
   randomTurnTime = (rand() % 800) + 200; 
+  
+  distance = getDistance();
+  while (distance < 10){
+        rightMotor(-255);
+        leftMotor(-255);
+        distance = getDistance();
+      }
   // randomly turn left or right
   if(rand()%2){
     rightMotor(-255);
@@ -210,9 +224,9 @@ void randomPerturb()
   }
   delay(randomTurnTime);
   //stop for 50ms
-  rightMotor(0);
-  leftMotor(0);
-  delay(50);
+  //rightMotor(0);
+  //leftMotor(0);
+  //delay(50);
   
 }
 /********************************************************************************/
