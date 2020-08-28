@@ -65,12 +65,13 @@ def get_model_detection_function(model):
   return detect_fn
 
 
-def predict_obj(image):
-    if not isinstance(image, np.array):
+def predict_obj(image, model):
+    if not isinstance(image, np.ndarray):
         image = load_image_into_numpy_array(image)
 
     input_tensor = tf.convert_to_tensor(
         np.expand_dims(image, 0), dtype=tf.float32)
+    detect_fn = get_model_detection_function(model)
     detections, predictions_dict, shapes = detect_fn(input_tensor)
 
     return detections, predictions_dict, shapes

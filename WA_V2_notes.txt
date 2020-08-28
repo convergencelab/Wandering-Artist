@@ -1,0 +1,7 @@
+For WA V2:
+    - incorporate a object detection module, use reinforcement learning to get detected object
+    in the proper frame of reference. So autonomously drive around until Ultrasound detects obstruction, use
+    reinforcement learning to have robot detect object, with very good alignment
+    in the image ( as centered as possible. ) .
+    - incorporate NLP to make discussion about the image, GPT-3?
+    - if NLP is doable, it would be funny to make an instagram for WA: https://pypi.org/project/instagram-python/
