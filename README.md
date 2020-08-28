@@ -8,7 +8,7 @@ to make interesting interpretations of the world it is taking in
 The robot will be equiped with a ultrasound sensor to aid in the initial dection of objects. i.e.
 if obstruction within x cm, run object detection with camera. If object make artistic interpretation
 
-![Sample of Camera Feed](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/original.png?raw=true)
+![Sample of Camera Feed](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/WAV1.jpg?raw=true)
 
 <h3>Components</h3>
 
