@@ -37,6 +37,7 @@ a Van Gogh Starry Night transfer onto my cup of coffee.
 ![Comparison](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/style_transfer_comp.png?raw=true)
 
 <h3>Resulting Image</h3>
+
 ![Sample of Transfer](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/transferred_style.png?raw=true)
    
    
