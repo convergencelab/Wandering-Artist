@@ -25,7 +25,7 @@ if obstruction within x cm, run object detection with camera. If object make art
 The Wandering artist will use different deep learning techniques to interpret the world
 <h3>object detection</h3> 
 if ultrasound detects obstruction: 
-    turn 180 degrees and begin backing up until full object in image 
+    turn 180 degrees and begin backing up until full object is detected in image 
     and sensor behind is safe. 
 
 ![Sample of Object Detection](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/detected.png?raw=true)
@@ -36,8 +36,7 @@ a Van Gogh Starry Night transfer onto my cup of coffee.
 
 ![Comparison](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/style_transfer_comp.png?raw=true)
 
-![Sample of Style](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/starrynight_style.png?raw=true)
-
+Below is the result:
 ![Sample of Transfer](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/transferred_style.png?raw=true)
    
    
