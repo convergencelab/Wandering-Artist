@@ -8,14 +8,17 @@ to make interesting interpretations of the world it is taking in
 The robot will be equiped with a ultrasound sensor to aid in the initial dection of objects. i.e.
 if obstruction within x cm, run object detection with camera. If object make artistic interpretation
 
+![Sample of Camera Feed](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/WAV1.jpg?raw=true)
 <h3>Components</h3>
-- 2 gear motors
-- 1 ultrasonic distance sensor
-- 1 switch
-- 1 motor driver
-- jumper wires
-- 1 sparkfun redboard
 
+<li>
+    <ul>2 gear motors</ul>
+    <ul>1 ultrasonic distance sensor</ul>
+    <ul>1 switch</ul>
+    <ul>1 motor driver</ul>
+    <ul>jumper wires</ul>
+    <ul>1 sparkfun redboard</ul>
+</li>
 <h3>Camera used</h3> 
    Iphone camera, feed hosted 
    

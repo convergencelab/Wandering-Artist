@@ -256,7 +256,7 @@ for n in range(epochs):
 
   plt.show()
   print("Train step: {}".format(step))
-plt.imsave("../assets/style_transferred.png")
+plt.imsave("../assets/style_transferred.png", tensor_to_image(image))
 # cv2.imwrite("../assets/style_transferred.png", tensor_to_image(image))
 end = time.time()
 print("Total time: {:.1f}".format(end - start))
