@@ -11,7 +11,8 @@ from object_detection.builders import model_builder
 import cv2
 import matplotlib.pyplot as plt
 import serial, time
-
+import json
+import numpy as np
 
 ####################
 # Object Detection #
@@ -26,6 +27,7 @@ categories = label_map_util.convert_label_map_to_categories(
     use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 label_map_dict = label_map_util.get_label_map_dict(label_map, use_display_name=True)
+# print(category_index[14])
 
 ## config pipeline ##
 MODELS = {'centernet_with_keypoints': 'centernet_hourglass104_512x512_kpts_coco17_tpu-32',
@@ -102,6 +104,13 @@ while(True):
             keypoints = detections['detection_keypoints'][0].numpy()
             keypoint_scores = detections['detection_keypoint_scores'][0].numpy()
 
+        with open('../tests/winner_winner.txt', 'w') as outfile:
+            winner = detections['detection_classes'][0].numpy()[np.argmax(detections['detection_scores'][0].numpy())]
+            outfile.write(label_map_dict[winner])
+       #  with open('data.txt', 'w') as outfile:
+        #     json.dump({'classes':[str(i) for i in detections['detection_classes'][0].numpy()],
+        #                'scores':[str(i) for i in detections['detection_scores'][0].numpy()]}, outfile)
+        """"
         viz_utils.visualize_boxes_and_labels_on_image_array(
             image_np_with_detections,
             detections['detection_boxes'][0].numpy(),
@@ -134,7 +143,7 @@ while(True):
     q = cv2.waitKey(1)
     if q == ord("q"):
         break
-
+"""
 video.release()
 cv2.destroyAllWindows()
 # plt.savefig("./test.png")

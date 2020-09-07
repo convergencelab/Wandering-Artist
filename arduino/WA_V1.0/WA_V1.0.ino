@@ -16,7 +16,7 @@
  *    - This behaviour is extremely simple and so it likely will not be overly succesful. 
  *    - Does not handle edge cases of getting stuck, should implement some sort of method of detecting if a robot is stuck
  *    - Turning is based on time, this is a very innaccurate method of consistently turning robot
- *    - May not properly handle delay times between Deep Learning Computations and robot 
+ *    - May not properly handle delay times between Deep Learning Computations and robot
  */
 
 
@@ -67,7 +67,7 @@ void setup()
   Serial.begin(115200); // use the same baud-rate as the python side
 }
 
-/********************************************************************************/
+/*******************************************************************************/
 /*
  drive autonomously until finding an object, back up until object is in good sight,
  snap picture, do style transfer carry on and continue autonomously driving
