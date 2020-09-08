@@ -14,15 +14,6 @@
  * Drawbacks of implementation:
  *    - will take excessive amounts of images
  *    - very over simplified, hardware does not allow for precise measurements
- *    
- *Big Problem:
- *  How do we keep track of all the distance covered? 
- *  
- *  NOTE: Front of WA = Camera facing side
- *        Back = Ultrasound side
- *        
- *        Positive rotation = right(+), left(-)
- *        Negative rotation = right(-), left(+)
  */
 
 
@@ -51,31 +42,8 @@ float r_distance = 0;
 int backupTime = 300;           //amount of time that the robot will back up when it senses an object
 int turnTime = 200;             //amount that the robot will turn once it has backed up
 int oneEightyTime = 1800;       //yikes
-/*
- * every time WA turns it must add it to turn time ref
- * once it writes the turn time and travel time to python
- * we must rest both times. 
- */
-
-/*MEASUREMENTS FOR SERIAL COMM*/
-//rather than a single value, make an dynamic array that stores all of
-//the actions until a image should be taken 
-// to ensure simplicity for serial communication: use a single array
-//every addition will have 3 values and so it must be asserted that the 
-//array's size is a factor of 3
-// allow for 3 instances of a change off the bat, if more we will grow array
-int MaxArrSize = 12;                    //allow for growth of array
-int CurArrSize = 0;                     //current size of array, also used as index
-
-//float *Location_Ref = new float[MaxArrSize];
-float *Location_Ref = (float*)malloc(sizeof(float) * MaxArrSize);
-
-float TurnTimeRef = 0.0;                //used to keep reference of every turn
-float TravelTimeRef = 0.0;              //used to keep reference of travel
-float UltraSoundRef = 0.0;              // used to keep reference of ultrasound distance 
-float Forwards;                         // bool for either backwards or forwards
+int TurnTime = 0;                //used to keep reference of every turn
 /********************************************************************************/
-
 void setup()
 {
   pinMode(trigPin, OUTPUT);       //this pin will send ultrasonic pulses out from the distance sensor
@@ -98,15 +66,9 @@ void setup()
 
 /*******************************************************************************/
 /*
- drive autonomously until finding an obstruction, take series of images while 
- backing up 
-  -for each image take snapshot and continue backing up 
-  -
-  ** Two forms of measuring distance: 1 - time traveled, distance from sensor
+ drive autonomously until finding an object, back up until object is in good sight,
+ snap picture, do style transfer carry on and continue autonomously driving
  */
- // so when backing up and not travelling for a specific amount of time
- // we will use the ultrasound sensor to measure the distance travelled. 
-
 void loop()
 {
   //DETECT THE DISTANCE READ BY THE DISTANCE SENSOR
@@ -117,84 +79,72 @@ void loop()
     if (distance < 10) {              //if an object is detected
       //back up and turn
       //stop for a moment
-      /*first if we have already been travelling for awhile, we need to log travel time forward*/
-      if (TravelTimeRef != 0.0){
-        logLocationRef();
-      }
       rightMotor(0);
       leftMotor(0);
       delay(200);
       //back up: we need about 10 inches to do 180
-      // WRT camera, this is actually forwards so we are not technically backing up
-      Forwards = 1.0;
       while (distance < 10){
         rightMotor(-255);
         leftMotor(-255);
-        //measure distance using ultrasound sensor
-        // measure going to be difference between old and new distance
-        UltraSoundRef -= distance;
         distance = getDistance();
-        UltraSoundRef += distance;
       }
       //STOP
       rightMotor(0);
       leftMotor(0);
       delay(200);
       
-      //one eighty: 
-      rightMotor(255);
-      leftMotor(-255);
+      //one eighty
+      rightMotor(-255);
+      leftMotor(255);
       delay(oneEightyTime);
-      
-      // record time
-      TurnTimeRef += oneEightyTime;
-      
+
       //stop
       rightMotor(0);
       leftMotor(0);
       delay(200);
-      
       /*COMMUNICATE WITH PYTHON*/
-      logLocationRef();
-      sendLocationRef();
-      
+      //11 == obstruction
+      Serial.println("011");
       
      //slowly back up until rear detects object (backup = forward as system will be in opposite direction) 
-      // backwards WRT camera
-      Forwards = 0.0;
       while (distance > 10){
         rightMotor(255);
         leftMotor(255);
         delay(200);
-        TravelTimeRef += 200;
         //stop
         rightMotor(0);
         leftMotor(0);
         delay(200);
-        
-        /*COMMUNICATE WITH PYTHON*/
-        logLocationRef();
-        sendLocationRef();
-        
+        // wait for python 
+        while (Serial.available() == 0) {
+            delay(50);
+        }
+        char data = Serial.read();
+        if(data == "001"){
+          //succesfully detected and performed style transfer
+          //exit loop
+          break;
+        }
         distance = getDistance();
       }
-      
+      if (distance < 10){
+        Serial.println("011");
+      }
+      Serial.println("100");
       // randomize direction
       randomPerturb();
-      //log random perturb
-      logLocationRef();
       distance = getDistance();
       
       /*SCENARIO 2: NO OBSTRUCTION*/
       } else {
-        Forwards = 0.0;
-        /*COMMUNICATE WITH PYTHON*/                     
-        //move forward (back wards WRT Camera)
+        /*COMMUNICATE WITH PYTHON*/
+        //10 == no obstruction
+        Serial.println("010");                       
+        //move forward
         rightMotor(255);
         leftMotor(255);
         delay(200);
-        // no need to log as we will jsut add it to total, no distance change
-        TravelTimeRef += 200;
+        
       }
   }
   else { 
@@ -258,25 +208,23 @@ void randomPerturb()
   while (distance < 10){
         rightMotor(-255);
         leftMotor(-255);
-        // measure going to be difference between old and new distance
-        UltraSoundRef -= distance;
         distance = getDistance();
-        UltraSoundRef += distance;
       }
   // randomly turn left or right
-  //CW = -
   if(rand()%2){
     rightMotor(-255);
     leftMotor(255);
-    TurnTimeRef-=randomTurnTime;
   }
-  //CCW = +
   else{
     rightMotor(255);
     leftMotor(-255);
-    TurnTimeRef+=randomTurnTime;
   }
   delay(randomTurnTime);
+  //stop for 50ms
+  //rightMotor(0);
+  //leftMotor(0);
+  //delay(50);
+  
 }
 /********************************************************************************/
 //RETURNS THE DISTANCE MEASURED BY THE HC-SR04 DISTANCE SENSOR
@@ -296,61 +244,4 @@ float getDistance()
   calculatedDistance = echoTime / 148.0;  //calculate the distance of the object that reflected the pulse (half the bounce time multiplied by the speed of sound)
 
   return calculatedDistance;              //send back the distance that was calculated
-}
-/********************************************************************************/
-void logLocationRef(){
-  /*
-   * loads all current values into array
-   * resets all vals
-   * location ref stores values in order:
-   * TurnTimeRef
-   * TravelTimeRef
-   * UltraSoundRef
-   * Forwards
-   */
-
-  //before adding new val must ensure that arr is big enough
-  CheckArr();
-  //TurnTimeRef
-  Location_Ref[sizeof(float) * CurArrSize] = TurnTimeRef;
-  CurArrSize++;
-  
-  //TravelTimeRef
-  Location_Ref[sizeof(float) * CurArrSize] = TravelTimeRef;
-  CurArrSize++;
-  
-  //UltraSoundRef
-  Location_Ref[sizeof(float) * CurArrSize] = UltraSoundRef;
-  CurArrSize++;
-  
-  //Forwards
-  Location_Ref[sizeof(float) * CurArrSize] = Forwards;
-  CurArrSize++;
-
-  //reset all references
-  TurnTimeRef = 0.0;
-  TravelTimeRef = 0.0;
-  UltraSoundRef = 0.0;
-}
-// reallocate mem for array
-void CheckArr(){
-  if (CurArrSize > MaxArrSize){
-    MaxArrSize*=2;
-    Location_Ref = (float*)realloc(Location_Ref, sizeof(float) * MaxArrSize);
-  }
-}
-// send array via serial
-void sendLocationRef(){
-  //send array, this will indicate that photo should be taken
-  byte *p = (byte*)Location_Ref;
-  for(byte i = 0; i < sizeof(Location_Ref); i++){
-    Serial.write(p[i]);
-  }
-  // reset array 
-  realloc(Location_Ref, 0);
-  float *Location_Ref = (float*)malloc(sizeof(float) * MaxArrSize);
-  // wait for python to confirm photo taken
-  while (Serial.available() == 0) {
-      delay(50);
-  }
 }

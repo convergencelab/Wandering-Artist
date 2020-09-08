@@ -1,8 +1,9 @@
 import numpy as np
 import json
+import matplotlib.pyplot as plt
 
 # how many degrees turned per ms
-TURN_DEG_PER_MS = 25
+TURN_DEG_PER_MS = 10
 # speed of robot, meters per ms
 VELOCITY_M_PER_MS = 0.1
 
@@ -17,11 +18,11 @@ class Model_Repr():
         self._ref_point = (0, 0, 0)
 
 
-    def log_new_point(self, turn_time, time_travelled, frame):
+    def log_new_point(self, turn_time, time_travelled, forwards, frame):
         """
         turn_time: time spent turning
-        time travelled: time spent moving; += forward, -= backwards
-
+        time travelled: time spent moving
+        forwards: bool, if True, move forwards, if false, moving backwards!
         to ensure simplicity in storing model, round all values to ints.
         """
         x, y, angle = self._ref_point
@@ -29,10 +30,17 @@ class Model_Repr():
         distance = time_travelled * VELOCITY_M_PER_MS
         turn_angle = turn_time * TURN_DEG_PER_MS
         angle_prime = int(abs((angle + turn_angle) % 360))
-        # x = Hcos(theta)
-        x_prime = int(x  + (distance * np.cos(angle_prime)))
-        # y = Hsin(theta)
-        y_prime = int(y  +  (distance * np.sin(angle_prime)))
+        """ 
+            using basic trig:
+            x = Hcos(theta)
+            y = Hsin(theta)
+        """
+        if forwards:
+            x_prime = int(x + (distance * np.cos(angle_prime)))
+            y_prime = int(y + (distance * np.sin(angle_prime)))
+        else:
+            x_prime = int(x - (distance * np.cos(angle_prime)))
+            y_prime = int(y - (distance * np.sin(angle_prime)))
 
         # save ref x, y, angle
         self._ref_point = x_prime, y_prime, angle_prime
@@ -45,5 +53,11 @@ class Model_Repr():
         """
         with open(fpath, 'w') as outfile:
            json.dump(self._points_on_plane, outfile)
+
+    def plot_model_space(self):
+        plt.figure(figsize=(12, 16))
+        points = [(x_prime, y_prime) for x_prime, y_prime, _ in self._points_on_plane.keys()]
+        plt.scatter(points)
+        plt.show()
 
 
