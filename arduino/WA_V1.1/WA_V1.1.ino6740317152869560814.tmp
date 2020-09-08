@@ -114,7 +114,7 @@ void loop()
 
   if (digitalRead(switchPin) == LOW) { //if the on switch is flipped
     /*SCENARIO 1: OBSTRUCTION*/
-    if (distance < 10) {              //if an obstruction is detected
+    if (distance < 10) {              //if an object is detected
       /*first if we have already been travelling for awhile, we need to log travel time forward*/
       if (TravelTimeRef != 0.0){
         logLocationRef();
@@ -350,7 +350,7 @@ void sendLocationRef(){
   //send array, this will indicate that photo should be taken
   
   for(int i = 0; i < CurArrSize; i++){
-    Serial.write((int)Location_Ref[i]);
+    Serial.println((int)Location_Ref[i]);
   }
   // reset array 
   CurArrSize = 0;

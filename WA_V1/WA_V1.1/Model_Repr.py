@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 
 # how many degrees turned per ms
 TURN_DEG_PER_MS = 10
-# speed of robot, meters per ms
-VELOCITY_M_PER_MS = 0.1
+# speed of robot, 20ms/inch
+VELOCITY_I_PER_MS = 0.05
+
+OUTPUT_DIR = "../data/"
 
 
 class Model_Repr():
@@ -18,24 +20,26 @@ class Model_Repr():
         self._ref_point = (0, 0, 0)
 
 
-    def log_new_point(self, turn_time, time_travelled, forwards, frame):
+    def log_new_point(self, TurnTimeRef, TravelTimeRef, UltraSoundRef,  Forwards, frame=None):
         """
         turn_time: time spent turning
         time travelled: time spent moving
         forwards: bool, if True, move forwards, if false, moving backwards!
         to ensure simplicity in storing model, round all values to ints.
+        frame: if frame = none, then this was not a position of which an image was snapped
         """
         x, y, angle = self._ref_point
         # Distance = time * velocity
-        distance = time_travelled * VELOCITY_M_PER_MS
-        turn_angle = turn_time * TURN_DEG_PER_MS
+        # TODO: convert m/ms to Inches/ms
+        distance = (TravelTimeRef * VELOCITY_I_PER_MS) + UltraSoundRef
+        turn_angle = TurnTimeRef * TURN_DEG_PER_MS
         angle_prime = int(abs((angle + turn_angle) % 360))
         """ 
             using basic trig:
             x = Hcos(theta)
             y = Hsin(theta)
         """
-        if forwards:
+        if Forwards:
             x_prime = int(x + (distance * np.cos(angle_prime)))
             y_prime = int(y + (distance * np.sin(angle_prime)))
         else:
@@ -47,6 +51,25 @@ class Model_Repr():
         # add new points to plane
         self._points_on_plane[x_prime, y_prime, angle_prime] = frame
 
+    def log_location_ref(self, loc_ref, frame):
+        """
+        logs entire location reference array from arduino
+
+        only one frame per ref, but potentially multiple steps leading up to it
+        """
+        # must be a multiple of 4
+        assert len(loc_ref) % 4 == 0
+        # index by 4
+        for i in range(0, len(loc_ref)-4, 4):
+            # initial steps will not have a image associated with it
+            TurnTimeRef, TravelTimeRef, UltraSoundRef, Forwards = loc_ref[i:i+4]
+            self.log_new_point(TurnTimeRef, TravelTimeRef, UltraSoundRef, Forwards)
+
+        # last point will include the image
+        TurnTimeRef, TravelTimeRef, UltraSoundRef, Forwards = loc_ref[len(loc_ref)-4:len(loc_ref)]
+        self.log_new_point(TurnTimeRef, TravelTimeRef, UltraSoundRef, Forwards, frame)
+
+
     def save_model(self, fpath):
         """
         overwrites entire file with updated representation
@@ -57,7 +80,7 @@ class Model_Repr():
     def plot_model_space(self):
         plt.figure(figsize=(12, 16))
         points = [(x_prime, y_prime) for x_prime, y_prime, _ in self._points_on_plane.keys()]
-        plt.scatter(points)
+        plt.plot(points)
         plt.show()
 
 
