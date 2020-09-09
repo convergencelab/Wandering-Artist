@@ -10,6 +10,7 @@ The robot will be equipped with a ultrasound sensor to aid in the initial detect
 ![Sample of Camera Feed](https://github.com/convergencelab/Wandering-Artist/blob/master/tests/assets/WA_V1_.jpg?raw=true)
 
 <h3>Components</h3>
+
 * 2 gear motors
 * 1 ultrasonic distance sensor
 * 1 switch
