@@ -12,13 +12,22 @@ from object_detection.builders import model_builder
 import matplotlib.pyplot as plt
 import time
 
+"""
+Given a model representation, 
+
+Perform object detection all images
+Only those that have objects in them will be kept
+the others will be removed from the model representation
+"""
+
 ##################
 # Configurations #
 ##################
-if not os.path.isdir("./data"):
+if not os.path.isdir("../data"):
     os.mkdir("../data")
 
 OUTPUT_DIR = "../data"
+# Images #
 
 ####################
 # Object Detection #
@@ -84,6 +93,23 @@ def predict_obj(frame):
         keypoint_scores=keypoint_scores,
         keypoint_edges=get_keypoint_tuples(configs['eval_config']))
     # if has detected obj, save to predictions
-    plt.figure(figsize=(12, 16))
-    title = OUTPUT_DIR + "obj_detection/" + str(time.localtime())
-    cv2.imwrite(title, image_np_with_detections)
+    # plt.figure(figsize=(12, 16))
+    # title = OUTPUT_DIR + "obj_detection/" + str(time.localtime())
+    # cv2.imwrite(title, image_np_with_detections)
+    return image_np_with_detections, \
+           detections['detection_boxes'][0].numpy(), \
+           (detections['detection_classes'][0].numpy() + label_id_offset).astype(int),\
+           detections['detection_scores'][0].numpy()
+
+img = cv2.imread(r"C:\Users\Noah Barrett\Desktop\School\Research 2020\code\Wandering-Artist\tests\assets\original.png")
+image, boxes, classes, scores = predict_obj(img)
+print("/********************************************************************************************/")
+print(boxes)
+print(classes)
+print(scores)
+print("/********************************************************************************************/")
+def predict_entire_model(Model_Repr):
+    model = Model_Repr._points_on_plane
+    for point in model.keys():
+        img = cv2.imread(model[point])
+        image, boxes, classes, scores = predict_obj(img)

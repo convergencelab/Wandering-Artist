@@ -1,6 +1,7 @@
 import numpy as np
 import json
 import matplotlib.pyplot as plt
+import os
 
 # how many degrees turned per ms
 TURN_DEG_PER_MS = 10
@@ -20,7 +21,7 @@ class Model_Repr():
         self._ref_point = (0, 0, 0)
 
 
-    def log_new_point(self, TurnTimeRef, TravelTimeRef, UltraSoundRef,  Forwards, frame=None):
+    def log_new_point(self, TurnTimeRef, TravelTimeRef, UltraSoundRef, Forwards, frame=None):
         """
         turn_time: time spent turning
         time travelled: time spent moving
@@ -30,16 +31,24 @@ class Model_Repr():
         """
         x, y, angle = self._ref_point
         # Distance = time * velocity
-        # TODO: convert m/ms to Inches/ms
+        # the time will carry sign, negative sign represents distance travelled backwards
         distance = (TravelTimeRef * VELOCITY_I_PER_MS) + UltraSoundRef
         turn_angle = TurnTimeRef * TURN_DEG_PER_MS
-        angle_prime = int(abs((angle + turn_angle) % 360))
+
         """ 
             using basic trig:
             x = Hcos(theta)
             y = Hsin(theta)
+            ** May be wrong?? ***
         """
+        # if time spent turning is positive: means in positive direction
+        # compute angle
+        if TurnTimeRef > 0:
+            angle_prime = int((angle + turn_angle) % 360)
+        else:
+            angle_prime = int((angle + (turn_angle + 360))% 360)
         if Forwards:
+            # compute trajectory
             x_prime = int(x + (distance * np.cos(angle_prime)))
             y_prime = int(y + (distance * np.sin(angle_prime)))
         else:
@@ -83,4 +92,9 @@ class Model_Repr():
         plt.plot(points)
         plt.show()
 
-
+    def remove_point(self, point):
+        # remove img
+        img_location = self._points_on_plane[point]
+        os.remove(img_location)
+        # remove from model
+        del self._points_on_plane[point]

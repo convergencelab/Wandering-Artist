@@ -20,15 +20,28 @@ import serial, time
 import datetime
 import numpy as np
 from Model_Repr import Model_Repr, OUTPUT_DIR
+from PIL import Image
 
 ### Model Representation ###
 # store all frames in a euclidean representation
 Model_Repr = Model_Repr()
-IMG_DIR = OUTPUT_DIR+'imgs'
+MAX_IMAGE = 100
+### handling images ###
+IMG_DIR = OUTPUT_DIR+'imgs/'
 if not os.path.isdir(IMG_DIR):
     os.mkdir(IMG_DIR)
+    IMG_DIR += "/1/"
+    os.mkdir(IMG_DIR)
+    IMG_DIR += "raw_data/"
+    os.mkdir(IMG_DIR)
+else:
+    m_val = max([int(dir) for dir in os.listdir(IMG_DIR)])+1
+    IMG_DIR += "/{}/".format(m_val)
+    os.mkdir(IMG_DIR)
+    IMG_DIR += "raw_data/".format(m_val)
+    os.mkdir(IMG_DIR)
 
-
+print(IMG_DIR)
 ## Video Stream ##
 EXPERIMENT_TITLE = "WA_V1"
 # intialize connection with video stream
@@ -57,19 +70,24 @@ while(True):
         time.sleep(1)
         # location reference from arduino (bytes)
         location_ref = arduino.readlines()
+        print(location_ref)
         if location_ref:
             # convert bytes back to ints
-            Location_Ref = [int(val) for val in location_ref]
+            location_ref = [int.from_bytes(val, byteorder=sys.byteorder, signed=True) for val in location_ref]
             #cv2.imshow('frame', frame)
             # save frame
+            print(location_ref)
+            s = ''
+            for l in location_ref:
+                s+=str(l)+"_"
 
-            img_title = os.path.join(IMG_DIR, str(datetime.datetime.now()).replace(" ", "_") + ".jpg")
-            print(img_title)
+            img_title = IMG_DIR +s[:-1]+  ".png"
+            cv2.imshow(img_title, frame)
             cv2.imwrite(img_title, frame)
-
-
+            #im = Image.fromarray(frame)
+            #im.save(img_title)
             # record location
-            Model_Repr.log_location_ref(Location_Ref, img_title)
+            Model_Repr.log_location_ref(location_ref, img_title)
             arduino.write(arduino_comm["Photo_Captured"])
 
             # arduino.flush()
@@ -78,6 +96,8 @@ while(True):
 
         # cv2.imshow('frame', frame)
         # video.write(frame)
+        if len(os.listdir(IMG_DIR)) == MAX_IMAGE:
+            break
         q = cv2.waitKey(1)
         if q == ord("q"):
             break
