@@ -11,6 +11,9 @@ from object_detection.utils import config_util
 from object_detection.builders import model_builder
 import matplotlib.pyplot as plt
 import time
+import numpy as np
+
+OBJ_ACCEPTANCE_THRESHOLD = 0.40
 
 """
 Given a model representation, 
@@ -23,11 +26,11 @@ the others will be removed from the model representation
 ##################
 # Configurations #
 ##################
-if not os.path.isdir("../data"):
-    os.mkdir("../data")
-
 OUTPUT_DIR = "../data"
-# Images #
+if not os.path.isdir(OUTPUT_DIR):
+    os.mkdir(OUTPUT_DIR)
+
+
 
 ####################
 # Object Detection #
@@ -42,7 +45,6 @@ categories = label_map_util.convert_label_map_to_categories(
 category_index = label_map_util.create_category_index(categories)
 label_map_dict = label_map_util.get_label_map_dict(label_map, use_display_name=True)
 
-
 ## config pipeline ##
 MODELS = {'centernet_with_keypoints': 'centernet_hourglass104_512x512_kpts_coco17_tpu-32',
           'centernet_without_keypoints': 'centernet_hourglass104_512x512_coco17_tpu-8',
@@ -52,9 +54,9 @@ MODELS = {'centernet_with_keypoints': 'centernet_hourglass104_512x512_kpts_coco1
 model_display_name = 'centernet_without_keypoints' # @param ['centernet_with_keypoints', 'centernet_without_keypoints']
 model_name = MODELS[model_display_name]
 
-pipeline_config = os.path.join('../models/research/object_detection/configs/tf2/',
+pipeline_config = os.path.join('../../models/research/object_detection/configs/tf2/',
                                 model_name + '.config')
-model_dir = '../models/research/object_detection/test_data/' + model_name + '/checkpoint/'
+model_dir = '../../models/research/object_detection/test_data/' + model_name + '/checkpoint/'
 # Load pipeline config and build a detection model
 configs = config_util.get_configs_from_pipeline_file(pipeline_config)
 model_config = configs['model']
@@ -67,7 +69,7 @@ ckpt = tf.compat.v2.train.Checkpoint(
 ckpt.restore(os.path.join(model_dir, 'ckpt-0')).expect_partial()
 detect_fn = get_model_detection_function(detection_model)
 
-def predict_obj(frame):
+def Object_Detection(frame):
     detections, predictions_dict, shapes = predict_obj(frame, detection_model)
     # copy frame
     label_id_offset = 1
@@ -102,14 +104,11 @@ def predict_obj(frame):
            detections['detection_scores'][0].numpy()
 
 img = cv2.imread(r"C:\Users\Noah Barrett\Desktop\School\Research 2020\code\Wandering-Artist\tests\assets\original.png")
-image, boxes, classes, scores = predict_obj(img)
+image, boxes, classes, scores = Object_Detection(img)
 print("/********************************************************************************************/")
-print(boxes)
-print(classes)
-print(scores)
+# print(boxes)
+index = np.argmax(scores)
+print(scores[index])
+print(classes[index])
+
 print("/********************************************************************************************/")
-def predict_entire_model(Model_Repr):
-    model = Model_Repr._points_on_plane
-    for point in model.keys():
-        img = cv2.imread(model[point])
-        image, boxes, classes, scores = predict_obj(img)

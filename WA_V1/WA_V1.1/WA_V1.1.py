@@ -15,33 +15,43 @@ import os, sys
 research_dir = os.path.abspath("../../models/research")
 sys.path.append(research_dir)  # To find local version of the library
 import cv2
-import matplotlib.pyplot as plt
 import serial, time
 import datetime
 import numpy as np
 from Model_Repr import Model_Repr, OUTPUT_DIR
-from PIL import Image
+from obj_detection import Object_Detection
+from style_transfer import Style_Transfer
 
 ### Model Representation ###
 # store all frames in a euclidean representation
 Model_Repr = Model_Repr()
 MAX_IMAGE = 100
-### handling images ###
-IMG_DIR = OUTPUT_DIR+'imgs/'
-if not os.path.isdir(IMG_DIR):
-    os.mkdir(IMG_DIR)
-    IMG_DIR += "/1/"
-    os.mkdir(IMG_DIR)
-    IMG_DIR += "raw_data/"
-    os.mkdir(IMG_DIR)
-else:
-    m_val = max([int(dir) for dir in os.listdir(IMG_DIR)])+1
-    IMG_DIR += "/{}/".format(m_val)
-    os.mkdir(IMG_DIR)
-    IMG_DIR += "raw_data/".format(m_val)
-    os.mkdir(IMG_DIR)
+OBJ_ACCEPTANCE_THRESHOLD = 0.40
 
-print(IMG_DIR)
+### handling image storage ###
+
+if os.listdir(OUTPUT_DIR):
+    m_val = max([int(dir) for dir in os.listdir(OUTPUT_DIR)]) + 1
+    IMG_DIR = OUTPUT_DIR + "{}/imgs/".format(m_val)
+    MODEL_DIR = OUTPUT_DIR + "{}/model/".format(m_val)
+else:
+    os.mkdir(OUTPUT_DIR + "1/")
+    IMG_DIR = OUTPUT_DIR + "1/imgs/"
+    MODEL_DIR = OUTPUT_DIR + "1/model/"
+os.mkdir(IMG_DIR)
+# child dirs inside new img directory #
+RAW_DIR = IMG_DIR + "raw_data/"
+os.mkdir(RAW_DIR)
+# analyzed data #
+IMG_DIR += "Analyzed/"
+os.mkdir(IMG_DIR)
+# make style and obj dirs #
+OBJ_DIR = IMG_DIR + "obj_detection/"
+os.mkdir(OBJ_DIR)
+STYLE_DIR = IMG_DIR + "style_transfer/"
+os.mkdir(STYLE_DIR)
+
+
 ## Video Stream ##
 EXPERIMENT_TITLE = "WA_V1"
 # intialize connection with video stream
@@ -73,15 +83,13 @@ while(True):
         print(location_ref)
         if location_ref:
             # convert bytes back to ints
-            location_ref = [int.from_bytes(val, byteorder=sys.byteorder, signed=True) for val in location_ref]
+            location_ref = [int(val) for val in location_ref]
             #cv2.imshow('frame', frame)
             # save frame
             print(location_ref)
-            s = ''
-            for l in location_ref:
-                s+=str(l)+"_"
 
-            img_title = IMG_DIR +s[:-1]+  ".png"
+
+            img_title = RAW_DIR +str(datetime.datetime.now())[:-7].replace(" ", "_").replace(":", "-") +  ".png"
             cv2.imshow(img_title, frame)
             cv2.imwrite(img_title, frame)
             #im = Image.fromarray(frame)
@@ -96,7 +104,7 @@ while(True):
 
         # cv2.imshow('frame', frame)
         # video.write(frame)
-        if len(os.listdir(IMG_DIR)) == MAX_IMAGE:
+        if len(os.listdir(RAW_DIR)) == MAX_IMAGE:
             break
         q = cv2.waitKey(1)
         if q == ord("q"):
@@ -105,5 +113,46 @@ while(True):
 # video.release()
 cv2.destroyAllWindows()
 
+##################
+# Image Analysis #
+##################
+
+# Obj detection & Style transfer #
+model = Model_Repr._points_on_plane
+for point in model.keys():
+    img = cv2.imread(model[point])
+    det_obj_img, _, classes, scores = Object_Detection(img)
+
+    # get max score
+    index = np.argmax(scores)
+
+    # for later use we can include the max classes using classes
+    # TODO: incorporate classes for NLP!
+
+    # if score is greater than or equal to our threshold for obj acceptance
+    if scores[index] >= OBJ_ACCEPTANCE_THRESHOLD:
+        # perform style transfer on image
+        style_dir = STYLE_DIR + os.path.basename(model[point])
+        # perform style transfer
+        styled_img = Style_Transfer(model[point])
+        # write styled img
+        cv2.imwrite(style_dir, styled_img)
+
+        obj_dir = OBJ_DIR + os.path.basename(model[point])
+        # write obj detection img
+        cv2.imwrite(obj_dir, det_obj_img)
+
+        # save images as tuple pair in model rep
+        model[point] = obj_dir, style_dir
+
+    else:
+        # remove point from the model representation
+        Model_Repr.remove_point(point)
+
+##############
+# SAVE MODEL #
+##############
+model_dir = MODEL_DIR + "model_" + m_val +".json"
+Model_Repr.save_model(model_dir)
 
 

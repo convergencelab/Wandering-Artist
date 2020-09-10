@@ -350,7 +350,7 @@ void sendLocationRef(){
   //send array, this will indicate that photo should be taken
   
   for(int i = 0; i < CurArrSize; i++){
-    Serial.write((int)Location_Ref[i]);
+    Serial.println((int)Location_Ref[i]);
   }
   // reset array 
   CurArrSize = 0;
